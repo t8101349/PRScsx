@@ -97,7 +97,7 @@ else
         echo "The \"--chr\" input aberrant."
         exit 1
     fi
-
+"""
     # === 平行 PRScsx ===
     run_prscsx () {
         chr=$1
@@ -144,15 +144,19 @@ else
         eval $cmd 2>&1 | tee "${outdir}/${outname}_chr${chr}.log"
     }
     export -f run_prscsx
+"""
 
-    echo "POP is: $pop"
+    for chr in {1..22}; do
+        f="${output_dir}/${outname}_chr${chr}_${pop}_pst_eff_a1_b0.5_phiauto_chr${chr}.txt"
+        if [[ ! -f "$f" ]]; then
+            echo "[缺檔] $f → chr${chr}"
+            
+        else
+            echo "[OK] $f"
+        fi
+    done && \
+    cat $(for chr in {1..22}; do echo "${output_dir}/${outname}_chr${chr}_${pop}_pst_eff_a1_b0.5_phiauto_chr${chr}.txt"; done) > ${output_dir}/${outname}_merged.txt
 
-    parallel -j "3" run_prscsx \
-    ::: $list ::: "$phi" ::: "$n_gwas" ::: "$bfile" ::: "$output_dir" ::: "$outname" ::: "$refld" ::: "$MCMC_ITER" ::: "$MCMC_BURNIN" ::: "$BETA_STD" ::: "$prscsx" ::: "$pop"
-
-
-    ## === 合併結果並製作 scorefile ===
-    cat ${output_dir}/${outname}_chr*_${pop}_pst_eff_a1_b0.5_phiauto_chr*.txt > ${output_dir}/${outname}_merged.txt  
     awk 'NR>1 {print $2, $4, $6}' ${output_dir}/${outname}_merged.txt > ${output_dir}/${outname}.scorefile.txt
 
     # === 準備 keep 檔案 ===
@@ -177,7 +181,7 @@ fi
 
 
 : << Demo
-bash /home/Weber/Pipeline/PRS/PRSCSX_for_target.sh \
+bash /home/Weber/Pipeline/PRS/PRSCSX_check.sh \
 				-b /SNParray/SourceShare/20240321_50w_Imputation/step12-pgen2bed/Axiom_imputed_r2.MAF \
 				-g /home/Weber/Cancer/coloncancer/20250709/GWAS2/ISCOLONCANCER_TPMI_imputed_adjGWAS.glm.logistic \
 				-n 59840 \

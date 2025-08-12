@@ -14,7 +14,7 @@ def parse_ref_multi(ref_files: dict, outfile):
 
     print(f"... parse reference files ...")
 
-    pops = list(ref_files.keys())
+    pops = list(ref_files.keys())  # AMR, EUR, AFR, EAS, SAS
     base_pop = pops[0]  # 第一個族群作為 reference 對齊用
     ref_dfs = {}
 

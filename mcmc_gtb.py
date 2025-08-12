@@ -169,7 +169,9 @@ def mcmc(a, b, phi, snp_dict, beta_mrg, frq_dict, idx_dict, n, ld_blk, blk_size,
 
         with open(eff_file, 'w') as ff:
             for snp, bp, a1, a2, beta in zip(snp_pp, bp_pp, a1_pp, a2_pp, beta_est[pp]):
-                ff.write('%d\t%s\t%d\t%s\t%s\t%.6e\n' % (chrom, snp, bp, a1, a2, beta))
+                # print(isinstance(chrom, int))
+                # print(isinstance(bp, str))
+                ff.write('%d\t%s\t%s\t%s\t%s\t%.6e\n' % (chrom, snp, bp, a1, a2, beta))
 
     if meta == 'TRUE':
         if phi_updt == True:

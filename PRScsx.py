@@ -28,6 +28,8 @@ import getopt
 import parse_genet
 import mcmc_gtb
 import gigrnd
+from collections import defaultdict
+
 
 
 def parse_param():
@@ -125,29 +127,50 @@ def main():
     for chrom in param_dict['chrom']:
         print('##### process chromosome %d #####' % int(chrom))
 
-        if os.path.isfile(param_dict['ref_dir'] + '/snpinfo_mult_1kg_hm3'):
-            ref = '1kg'
-            ref_dict = parse_genet.parse_ref(param_dict['ref_dir'] + '/snpinfo_mult_1kg_hm3', int(chrom), ref)
-        elif os.path.isfile(param_dict['ref_dir'] + '/snpinfo_mult_ukbb_hm3'):
-            ref = 'ukbb'
-            ref_dict = parse_genet.parse_ref(param_dict['ref_dir'] + '/snpinfo_mult_ukbb_hm3', int(chrom), ref)
 
+        if os.path.isfile(param_dict['ref_dir'] + '/snpinfo_1kg_hm3'):
+            ref = '1kg'
+            ref_dict = parse_genet.parse_ref(param_dict['ref_dir'] + '/snpinfo_1kg_hm3', int(chrom), ref)
+        elif os.path.isfile(param_dict['ref_dir'] + '/snpinfo_ukbb_hm3'):
+            ref = 'ukbb'
+            ref_dict = parse_genet.parse_ref(param_dict['ref_dir'] + '/snpinfo_ukbb_hm3', int(chrom), ref)
+        else:
+            raise FileNotFoundError(f"Cannot find snpinfo_1kg_hm3 in {param_dict['ref_dir']}")
+            
         vld_dict = parse_genet.parse_bim(param_dict['bim_prefix'], int(chrom))
 
+        
         sst_dict = {}
         for pp in range(n_pop):
             sst_dict[pp] = parse_genet.parse_sumstats(ref_dict, vld_dict, param_dict['sst_file'][pp], param_dict['pop'][pp], param_dict['n_gwas'][pp])
+        
+            # print(sst_dict[pp]['SNP'][:10])
+        # === 驗證是否正確載入 ===
+        if not sst_dict:
+            raise ValueError("Must have sumstats files with correct naming.")
 
+        
         ld_blk = {}
         blk_size = {}
         for pp in range(n_pop):
             ld_blk[pp], blk_size[pp] = parse_genet.parse_ldblk(param_dict['ref_dir'], sst_dict[pp], param_dict['pop'][pp], int(chrom), ref)
-
-        snp_dict, beta_dict, frq_dict, idx_dict = parse_genet.align_ldblk(ref_dict, vld_dict, sst_dict, n_pop, int(chrom))
-
-        mcmc_gtb.mcmc(param_dict['a'], param_dict['b'], param_dict['phi'], snp_dict, beta_dict, frq_dict, idx_dict, param_dict['n_gwas'], ld_blk, blk_size,
-            param_dict['n_iter'], param_dict['n_burnin'], param_dict['thin'], param_dict['pop'], int(chrom),
-            param_dict['out_dir'], param_dict['out_name'], param_dict['meta'], param_dict['write_pst'], param_dict['seed'])
+        
+        
+        # === 對齊 reference sumstats 用於推估 effect size（記得是 sst_dict_ref，不是未定義的 sst_dict）===
+        snp_dict, beta_dict, frq_dict, idx_dict = parse_genet.align_ldblk(
+            ref_dict, vld_dict, sst_dict, n_pop, int(chrom)
+        )
+        
+        
+        mcmc_gtb.mcmc(
+            param_dict['a'], param_dict['b'], param_dict['phi'],
+            snp_dict, beta_dict, frq_dict, idx_dict,
+            param_dict['n_gwas'], ld_blk, blk_size,
+            param_dict['n_iter'], param_dict['n_burnin'], param_dict['thin'],
+            param_dict['pop'], int(chrom),
+            param_dict['out_dir'], param_dict['out_name'],
+            param_dict['meta'], param_dict['write_pst'], param_dict['seed']
+        )
 
         print('\n')
 
