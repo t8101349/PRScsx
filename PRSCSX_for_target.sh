@@ -172,7 +172,25 @@ else
     awk 'NR==FNR {a[$1]; next} ($2 in a)' "$target_list" "${output_dir}/${outname}.profile" > "${output_dir}/${outname}.target.score"
     awk 'NR==FNR {a[$1]; next} ($2 in a)' "$val_list" "${output_dir}/${outname}.profile" > "${output_dir}/${outname}.validate.score"
 
-    echo "PRS-CS completed at $(date)"
+    echo "PRS-CSX completed at $(date)"
+
+    # read -p "phenotype name is: " phename
+    # echo "phenotype name is $phename"
+    upper_phename=${outname%_*}
+    echo "${upper_phename} plotting"
+
+    lower_phename=$(echo "$upper_phename" | tr '[:upper:]' '[:lower:]')
+
+    # 作圖  PRS_Distribution_Plot_csx.py
+    python /home/Weber/Pipeline/PRS/PRS_Distribution_Plot_csx.py \
+    --prs "${output_dir}/${outname}.validate.score" \
+    --pheno IS${upper_phename}pheno.matchit.txt \
+    --phename "${lower_phename}" \
+    --normalize z_std \
+    --out ${lower_phename}_validate
+
+     echo "PRS Distribution Plot completed"
+    
 fi
 
 
