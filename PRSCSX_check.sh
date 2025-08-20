@@ -180,7 +180,7 @@ else
 
     # read -p "phenotype name is: " phename
     # echo "phenotype name is $phename"
-    upper_phename=${outname%_*}
+    upper_phename=$(echo "${outname%%_*}" | tr '[:lower:]' '[:upper:]')
     echo "${upper_phename} plotting"
 
     lower_phename=$(echo "$upper_phename" | tr '[:upper:]' '[:lower:]')
